@@ -12,7 +12,7 @@ class ListingController extends Controller
     // Show all listings
     public function index() {
         return view('listings.index', [
-            'listings' => Listing::latest()->filter(request(['tag', 'search']))->get()
+            'listings' => Listing::latest()->filter(request(['tag', 'search']))->paginate(5)
         ]);
     }
 
@@ -36,10 +36,50 @@ class ListingController extends Controller
             'email' => ['required', 'email'],
             'tags' => 'required',
             'description' => 'required',
+            'location' => 'required',
+            'website' => 'required'
         ]);
+
+        if($request->hasFile('logo')) {
+            $formFields['logo'] = $request->file('logo')->store('logos', 'public');
+            $formFields['logo'] = 'storage/' . $formFields['logo'];
+        }
 
         Listing::create($formFields);
 
-        return redirect('/');
+        return redirect('/')->with('message', 'Listing Created Successfully!');
+    }
+
+    // Show Edit Form
+    public function edit(Listing $listing) {
+        return view('listings.edit', ['listing' => $listing]);
+    }
+
+    // Update Listing Data
+    public function update(Request $request, Listing $listing ) {
+        $formFields = $request->validate([
+            'title' => 'required',
+            'company' => ['required'],
+            'email' => ['required', 'email'],
+            'tags' => 'required',
+            'description' => 'required',
+            'location' => 'required',
+            'website' => 'required',
+        ]);
+
+        if($request->hasFile('logo')) {
+            $formFields['logo'] = $request->file('logo')->store('logos', 'public');
+            $formFields['logo'] = 'storage/' . $formFields['logo'];
+        }
+
+        $listing->update($formFields);
+
+        return back()->with('message', 'Listing Updated Successfully!');
+    }
+
+    // Deleting a Listing
+    public function destroy(Listing $listing) {
+        $listing->delete();
+        return redirect('/')->with('message', 'Listing Deleted Successfully');
     }
 }
